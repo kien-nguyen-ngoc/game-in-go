@@ -9,7 +9,7 @@ type Tank struct {
 	Y     int
 	Lives int
 
-	bullet *Bullet
+	Bullet *Bullet
 }
 
 type Bullet struct {
@@ -22,22 +22,22 @@ type Bullet struct {
 func New(boardRows, boardColumns int) *Tank {
 	tank := new(Tank)
 
-	tank.bullet = nil
+	tank.Bullet = nil
 
 	tank.Cells = make([]cell.Cell, 12)
 
 	tank.Cells[0] = *cell.NewCell(0, 0, boardColumns, boardRows)
-	tank.Cells[1] = *cell.NewCell(1, 0, boardColumns, boardRows)
+	tank.Cells[1] = *cell.NewCell(1, 0, boardColumns, boardRows)	// player or enemy
 	tank.Cells[2] = *cell.NewCell(2, 0, boardColumns, boardRows)
-	tank.Cells[3] = *cell.NewCell(3, 0, boardColumns, boardRows)
-	tank.Cells[4] = *cell.NewCell(4, 0, boardColumns, boardRows)
-	tank.Cells[5] = *cell.NewCell(5, 0, boardColumns, boardRows)
-	tank.Cells[6] = *cell.NewCell(6, 0, boardColumns, boardRows)
-	tank.Cells[7] = *cell.NewCell(7, 0, boardColumns, boardRows)
-	tank.Cells[8] = *cell.NewCell(8, 0, boardColumns, boardRows)
-	tank.Cells[9] = *cell.NewCell(9, 0, boardColumns, boardRows)
-	tank.Cells[10] = *cell.NewCell(10, 0, boardColumns, boardRows)
-	tank.Cells[11] = *cell.NewCell(11, 0, boardColumns, boardRows)
+	tank.Cells[3] = *cell.NewCell(0, 1, boardColumns, boardRows)
+	tank.Cells[4] = *cell.NewCell(1, 1, boardColumns, boardRows)
+	tank.Cells[5] = *cell.NewCell(2, 1, boardColumns, boardRows)
+	tank.Cells[6] = *cell.NewCell(0, 2, boardColumns, boardRows)
+	tank.Cells[7] = *cell.NewCell(1, 2, boardColumns, boardRows)
+	tank.Cells[8] = *cell.NewCell(2, 2, boardColumns, boardRows)
+	tank.Cells[9] = *cell.NewCell(0, 3, boardColumns, boardRows)	// hidden
+	tank.Cells[10] = *cell.NewCell(1, 3, boardColumns, boardRows)
+	tank.Cells[11] = *cell.NewCell(2, 3, boardColumns, boardRows) // hidden
 
 	tank.SetAlive(true)
 	if tank == nil {
@@ -55,6 +55,10 @@ func (tank *Tank) SetAlive(alive bool) {
 	for _, c := range tank.Cells {
 		*c.Alive = alive
 	}
+	*tank.Cells[1].Alive = false
+	*tank.Cells[9].Alive = false
+	*tank.Cells[11].Alive = false
+
 }
 
 func (tank *Tank) Move(direction int) {
