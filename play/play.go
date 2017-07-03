@@ -1,9 +1,8 @@
 package play
 
 import (
-	"../board/cell"
+	"../object/cell"
 )
-
 
 // checkState determines the state of the Cell for the next tick of the game.
 func CheckState(c *cell.Cell, cells [][]*cell.Cell) {

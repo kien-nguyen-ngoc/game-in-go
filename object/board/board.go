@@ -1,13 +1,13 @@
 package board
 
 import (
-	"time"
-	"math/rand"
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"math/rand"
+	"time"
 
+	"../cell"
 	"../tank"
-	"./cell"
 )
 
 const (
@@ -18,9 +18,24 @@ const (
 	columns = 100
 )
 
- 
+type Board struct {
+	Cells [][]cell.Cell
+	tanks []tank.Tank
+}
 
+func (board *Board)GetBoardWidth() int {
+	return WindowWidth
+}
 
+func (board *Board)GetBoardHeight() int {
+	return WindowHeight
+}
+func (board *Board)GetBoardRows() int {
+	return rows
+}
+func (board *Board)GetBoardColumns() int {
+	return columns
+}
 
 func MakeCells() [][]*cell.Cell {
 	rand.Seed(time.Now().UnixNano())
@@ -40,13 +55,11 @@ func MakeCells() [][]*cell.Cell {
 	return cells
 }
 
-
-
-func Draw(window *glfw.Window, program uint32, cells [][]*cell.Cell, tank *tank.Tank)  {
+func Draw(window *glfw.Window, program uint32, cells [][]*cell.Cell, tank *tank.Tank) {
 	gl.UseProgram(program)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	DrawCell(cells, window, program)
+	//DrawCell(cells, window, program)
 	DrawTank(tank, window, program)
 
 	glfw.PollEvents()

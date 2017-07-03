@@ -5,6 +5,7 @@ import (
 
 	"../../util"
 )
+
 var (
 	Square = []float32{
 		-0.5, 0.5, 0,
@@ -67,7 +68,7 @@ func NewCell(x, y, columns, rows int) *Cell {
 		X: x,
 		Y: y,
 
-		Alive: new(bool),
-		AliveNext:new(bool),
+		Alive:     new(bool),
+		AliveNext: new(bool),
 	}
 }

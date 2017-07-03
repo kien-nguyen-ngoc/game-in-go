@@ -10,9 +10,9 @@ import (
 	"github.com/go-gl/gl/v2.1/gl" // OR: github.com/go-gl/gl/v4.1-core/gl
 	"github.com/go-gl/glfw/v3.2/glfw"
 
-	"./board"
+	"./object/board"
+	"./object/tank"
 	"./play"
-	"./tank"
 )
 
 const (
@@ -32,7 +32,7 @@ const (
 		}
 	` + "\x00"
 
-	fps       = 10
+	fps = 10
 )
 
 func main() {
@@ -42,8 +42,9 @@ func main() {
 	defer glfw.Terminate()
 	program := initOpenGL()
 
+	board_game := new(board.Board)
 	cells := board.MakeCells()
-	tank := tank.New()
+	tank := tank.New(board_game.GetBoardRows(), board_game.GetBoardColumns())
 
 	for !window.ShouldClose() {
 		t := time.Now()
