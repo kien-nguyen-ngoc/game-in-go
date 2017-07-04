@@ -6,18 +6,6 @@ import (
 	"time"
 )
 
-//var (
-//	BOTTOM_0 = 0
-//	BOTTOM_1 = 1
-//	BOTTOM_2 = 2
-//	MID_0    = 3
-//	MID_1    = 4
-//	MID_2    = 5
-//	GUN_0    = 6
-//	GUN_1    = 7
-//	GUN_2    = 8
-//)
-
 type Tank struct {
 	GameBoard *Board
 	Id        int
@@ -97,20 +85,35 @@ func (tank *Tank) SetAlive(alive bool, isEnemy bool) {
 
 }
 
+func (tank *Tank) MoveToPosition(x,y int){
+	for i := 0; i < len(tank.Cells); i++ {
+		tank.Cells[i] = *tank.GameBoard.NewCell(x-tank.Cells[i].X, y-tank.Cells[i].Y,
+			tank.GameBoard.GetBoardColumns(), tank.GameBoard.GetBoardRows())
+	}
+	tank.SetAlive(tank.Lives >= 0, tank.IsEnemy)
+}
+
 func (tank *Tank) MoveForward() {
-	isEnemy := tank.IsEnemy
 	gun_point := tank.Cells[tank.GUN_1]
 	bottom_point := tank.Cells[tank.BOTTOM_1]
-	moveX_step := (gun_point.X - bottom_point.X) / 3
-	moveY_step := (gun_point.Y - bottom_point.Y) / 3
+	moveX_step := (gun_point.X - bottom_point.X) / (len(tank.Cells)/3 - 1)
+	moveY_step := (gun_point.Y - bottom_point.Y) / (len(tank.Cells)/3 - 1)
 
-	log.Print(gun_point.X)
+	if gun_point.X == tank.GameBoard.GetBoardColumns()-1 {
+		moveX_step = 0
+	}
+	if gun_point.Y == tank.GameBoard.GetBoardRows()-1 {
+		moveY_step = 0
+	}
+
+	log.Print(gun_point.X - bottom_point.X)
+	log.Print(gun_point.Y - bottom_point.Y)
 
 	for i := 0; i < len(tank.Cells); i++ {
 		tank.Cells[i] = *tank.GameBoard.NewCell(tank.Cells[i].X+moveX_step, tank.Cells[i].Y+moveY_step,
 			tank.GameBoard.GetBoardColumns(), tank.GameBoard.GetBoardRows())
 	}
-	tank.SetAlive(tank.Lives >= 0, isEnemy)
+	tank.SetAlive(tank.Lives >= 0, tank.IsEnemy)
 }
 
 func (tank *Tank) RotateRight() {

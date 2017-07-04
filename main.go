@@ -43,15 +43,17 @@ func main() {
 
 	game_board := object.Board{Program: program, Window: window}
 	game_board.MakeCells()
-	game_board.MakeTanks(2)
-	//game_board.Tanks[0].RotateRight()
-	game_board.DestroyTank(0)
+	game_board.MakeTanks(1)
+	//game_board.DestroyTank(0)
 	for _, tank := range game_board.Tanks {
-		for i := 0; i < 5; i++ {
-			tank.MoveForward()
-		}
+		//tank.RotateRight()
+		//for i := 0; i < 5; i++ {
+		//	tank.MoveForward()
+		//}
+		tank.MoveToPosition(50,50)
 		//log.Print(tank.Cells[0].Y)
 	}
+
 
 	for !window.ShouldClose() {
 		t := time.Now()
