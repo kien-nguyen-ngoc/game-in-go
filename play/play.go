@@ -1,11 +1,11 @@
 package play
 
 import (
-	"../object/cell"
+	"../object"
 )
 
 // checkState determines the state of the Cell for the next tick of the game.
-func CheckState(c *cell.Cell, cells [][]*cell.Cell) {
+func CheckState(c *object.Cell, cells [][]*object.Cell) {
 	c.Alive = c.AliveNext
 	c.AliveNext = c.Alive
 
@@ -34,7 +34,7 @@ func CheckState(c *cell.Cell, cells [][]*cell.Cell) {
 }
 
 // liveNeighbors returns the number of live neighbors for a Cell.
-func LiveNeighbors(c *cell.Cell, cells [][]*cell.Cell) int {
+func LiveNeighbors(c *object.Cell, cells [][]*object.Cell) int {
 	var liveCount int
 	add := func(x, y int) {
 		// If we're at an edge, check the other side of the board.

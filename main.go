@@ -10,8 +10,7 @@ import (
 	"github.com/go-gl/gl/v2.1/gl" // OR: github.com/go-gl/gl/v4.1-core/gl
 	"github.com/go-gl/glfw/v3.2/glfw"
 
-	"./object/board"
-	"./object/tank"
+	"./object"
 	"./play"
 )
 
@@ -42,20 +41,28 @@ func main() {
 	defer glfw.Terminate()
 	program := initOpenGL()
 
-	board_game := new(board.Board)
-	cells := board.MakeCells()
-	tank := tank.New(board_game.GetBoardRows(), board_game.GetBoardColumns())
+	game_board := object.Board{Program: program, Window: window}
+	game_board.MakeCells()
+	game_board.MakeTanks(2)
+	//game_board.Tanks[0].RotateRight()
+	game_board.DestroyTank(0)
+	for _, tank := range game_board.Tanks {
+		for i := 0; i < 5; i++ {
+			tank.MoveForward()
+		}
+		//log.Print(tank.Cells[0].Y)
+	}
 
 	for !window.ShouldClose() {
 		t := time.Now()
 
-		for x := range cells {
-			for _, c := range cells[x] {
-				play.CheckState(c, cells)
+		for x := range game_board.Cells {
+			for _, c := range game_board.Cells[x] {
+				play.CheckState(c, game_board.Cells)
 			}
 		}
 
-		board.Draw(window, program, cells, tank)
+		game_board.Draw(game_board.Cells, game_board.Tanks)
 
 		time.Sleep(time.Second/time.Duration(fps) - time.Since(t))
 	}
@@ -72,7 +79,7 @@ func initGlfw() *glfw.Window {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	window, err := glfw.CreateWindow(board.WindowWidth, board.WindowHeight, "Conway's Game of Life", nil, nil)
+	window, err := glfw.CreateWindow(object.WindowWidth, object.WindowHeight, "Just for fun", nil, nil)
 	if err != nil {
 		panic(err)
 	}

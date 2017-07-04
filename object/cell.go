@@ -1,9 +1,9 @@
-package cell
+package object
 
 import (
 	"github.com/go-gl/gl/v2.1/gl"
 
-	"../../util"
+	"../util"
 )
 
 var (
@@ -19,6 +19,8 @@ var (
 )
 
 type Cell struct {
+	GameBoard *Board
+
 	Drawable uint32
 
 	Alive     *bool
@@ -37,7 +39,7 @@ func (c *Cell) Draw() {
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(Square)/3))
 }
 
-func NewCell(x, y, columns, rows int) *Cell {
+func (board *Board) NewCell(x, y, columns, rows int) *Cell {
 	points := make([]float32, len(Square), len(Square))
 	copy(points, Square)
 
@@ -63,7 +65,8 @@ func NewCell(x, y, columns, rows int) *Cell {
 	}
 
 	return &Cell{
-		Drawable: util.MakeVao(points),
+		GameBoard: board,
+		Drawable:  util.MakeVao(points),
 
 		X: x,
 		Y: y,
