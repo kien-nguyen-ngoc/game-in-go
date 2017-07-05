@@ -1,14 +1,13 @@
 package object
 
 import (
-	"log"
 	"math/rand"
 	"time"
 )
 
 type Tank struct {
 	GameBoard *Board
-	Id        int
+	Id        int64
 	Cells     []Cell
 
 	X     int
@@ -30,20 +29,25 @@ type Tank struct {
 }
 
 type Bullet struct {
-	point *Cell
+	Id int64
+	Tank *Tank
+	Cell      *Cell
 
-	X int
-	Y int
+	X       int
+	Y       int
+	XDirect int
+	YDirect int
 }
 
-func (board *Board) New(boardRows, boardColumns int, Id int, isEnemy bool) *Tank {
+func (board *Board) New(boardRows, boardColumns int, isEnemy bool) *Tank {
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
 
 	tank := new(Tank)
-	tank.Id = Id
+	tank.Id = time.Now().UnixNano()
 	tank.Bullet = nil
 	tank.Lives = int(r1.Int31n(5)) + 1
+	tank.IsEnemy = isEnemy
 
 	tank.BOTTOM_0 = 0
 	tank.BOTTOM_1 = 1
@@ -85,7 +89,7 @@ func (tank *Tank) SetAlive(alive bool, isEnemy bool) {
 
 }
 
-func (tank *Tank) MoveToPosition(x,y int){
+func (tank *Tank) MoveToPosition(x, y int) {
 	for i := 0; i < len(tank.Cells); i++ {
 		tank.Cells[i] = *tank.GameBoard.NewCell(x-tank.Cells[i].X, y-tank.Cells[i].Y,
 			tank.GameBoard.GetBoardColumns(), tank.GameBoard.GetBoardRows())
@@ -99,15 +103,12 @@ func (tank *Tank) MoveForward() {
 	moveX_step := (gun_point.X - bottom_point.X) / (len(tank.Cells)/3 - 1)
 	moveY_step := (gun_point.Y - bottom_point.Y) / (len(tank.Cells)/3 - 1)
 
-	if gun_point.X == tank.GameBoard.GetBoardColumns()-1 {
+	if gun_point.X == tank.GameBoard.GetBoardColumns()-1 || (gun_point.X == 0 && moveX_step < 0) {
 		moveX_step = 0
 	}
-	if gun_point.Y == tank.GameBoard.GetBoardRows()-1 {
+	if gun_point.Y == tank.GameBoard.GetBoardRows()-1 || (gun_point.Y == 0 && moveY_step < 0) {
 		moveY_step = 0
 	}
-
-	log.Print(gun_point.X - bottom_point.X)
-	log.Print(gun_point.Y - bottom_point.Y)
 
 	for i := 0; i < len(tank.Cells); i++ {
 		tank.Cells[i] = *tank.GameBoard.NewCell(tank.Cells[i].X+moveX_step, tank.Cells[i].Y+moveY_step,
@@ -169,12 +170,18 @@ func (tank *Tank) Rotate180() {
 	tank.RotateRight()
 }
 
-func (tank *Tank) fire() {
+func (tank *Tank) Fire() {
+	game_board := tank.GameBoard
 	bullet := new(Bullet)
 	bullet.X = tank.Cells[tank.GUN_1].X
 	bullet.Y = tank.Cells[tank.GUN_1].Y
-	bullet.point = new(Cell)
-	*bullet.point = tank.Cells[tank.GUN_1]
+	bullet.Cell = game_board.NewCell(bullet.X, bullet.Y, game_board.GetBoardColumns(), game_board.GetBoardRows())
+	*bullet.Cell.Alive = true
+	*bullet.Cell = tank.Cells[tank.GUN_1]
+	bullet.XDirect = (tank.Cells[tank.GUN_1].X - tank.Cells[tank.BOTTOM_1].X) / (len(tank.Cells)/3 - 1)
+	bullet.YDirect = (tank.Cells[tank.GUN_1].Y - tank.Cells[tank.BOTTOM_1].Y) / (len(tank.Cells)/3 - 1)
+	bullet.Tank = tank
+	bullet.Id = time.Now().UnixNano()
 
 	tank.Bullet = append(tank.Bullet, *bullet)
 }
@@ -182,5 +189,32 @@ func (tank *Tank) fire() {
 func (tank *Tank) Draw() {
 	for _, c := range tank.Cells {
 		c.Draw()
+	}
+}
+
+func (bullet *Bullet) Draw() {
+	tank := bullet.Tank
+	game_board := tank.GameBoard
+	bullet.Cell.Draw()
+
+	x := bullet.Cell.X
+	y := bullet.Cell.Y
+
+	x += bullet.XDirect
+	y += bullet.YDirect
+
+	if x < 0 || y < 0 || x >= game_board.GetBoardColumns() || y >= game_board.GetBoardRows() {
+		bullets := make([]Bullet, 0)
+		for _, b := range tank.Bullet {
+			if bullet.Id != b.Id {
+				bullets = append(bullets, b)
+			}
+		}
+		tank.Bullet = bullets
+	} else {
+		bullet.Cell = game_board.NewCell(x, y, game_board.GetBoardColumns(), game_board.GetBoardRows())
+		*bullet.Cell.Alive = true
+		bullet.X = x
+		bullet.Y = y
 	}
 }

@@ -11,7 +11,8 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 
 	"./object"
-	"./play"
+	//"./play"
+	"math/rand"
 )
 
 const (
@@ -36,6 +37,7 @@ const (
 
 func main() {
 	runtime.LockOSThread()
+	memory_stats := &runtime.MemStats{}
 
 	window := initGlfw()
 	defer glfw.Terminate()
@@ -43,28 +45,38 @@ func main() {
 
 	game_board := object.Board{Program: program, Window: window}
 	game_board.MakeCells()
-	game_board.MakeTanks(1)
+	game_board.MakeEnemyTanks(2)
+	game_board.MakePlayerTanks(1)
 	//game_board.DestroyTank(0)
-	for _, tank := range game_board.Tanks {
-		//tank.RotateRight()
-		//for i := 0; i < 5; i++ {
-		//	tank.MoveForward()
-		//}
-		tank.MoveToPosition(50,50)
-		//log.Print(tank.Cells[0].Y)
-	}
 
+	game_board.PlayerTanks[0].MoveToPosition(50,50)
+	game_board.PlayerTanks[0].RotateRight()
+	game_board.PlayerTanks[0].Fire()
 
 	for !window.ShouldClose() {
 		t := time.Now()
 
-		for x := range game_board.Cells {
-			for _, c := range game_board.Cells[x] {
-				play.CheckState(c, game_board.Cells)
+		for i:=0;i<len(game_board.EnemyTanks);i++ {
+			s1 := rand.NewSource(time.Now().UnixNano())
+			r1 := rand.New(s1)
+			if r1.Float32() > 0.45 {
+				game_board.EnemyTanks[i].RotateRight()
+			} else {
+				game_board.EnemyTanks[i].RotateLeft()
 			}
+			if r1.Float32() > 0.7 {
+				game_board.EnemyTanks[i].Fire()
+			}
+
+			game_board.EnemyTanks[i].MoveForward()
+			//tank.MoveToPosition(50,50)
+			//log.Printf("Enemy 0 bullet count %d", len(game_board.EnemyTanks[0].Bullet))
 		}
 
-		game_board.Draw(game_board.Cells, game_board.Tanks)
+		runtime.ReadMemStats(memory_stats)
+		fmt.Println("Time;Allocated;Total Allocated; System Memory;Num Gc;Heap Allocated;Heap System;Heap Objects;Heap Released;\n")
+		fmt.Printf("%s;%d;%d;%d;%d;%d;%d;%d;%d;\n", time.Now(), memory_stats.Alloc, memory_stats.TotalAlloc, memory_stats.Sys, memory_stats.NumGC, memory_stats.HeapAlloc, memory_stats.HeapSys, memory_stats.HeapObjects, memory_stats.HeapReleased)
+		game_board.Draw()
 
 		time.Sleep(time.Second/time.Duration(fps) - time.Since(t))
 	}
