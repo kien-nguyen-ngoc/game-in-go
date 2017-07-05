@@ -85,7 +85,6 @@ func (board *Board) Draw() {
 	gl.UseProgram(board.Program)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	//DrawCell(cells, board.Window, board.Program)
 	DrawTank(board.EnemyTanks, board.Window, board.Program)
 	DrawTank(board.PlayerTanks, board.Window, board.Program)
 

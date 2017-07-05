@@ -1,6 +1,7 @@
 package object
 
 import (
+	"log"
 	"math/rand"
 	"time"
 )
@@ -12,9 +13,11 @@ type Tank struct {
 
 	X     int
 	Y     int
-	Lives int
+	Lives *int
 
-	Bullet  []Bullet
+	Bullet      []Bullet
+	BulletLimit int
+
 	IsEnemy bool
 
 	BOTTOM_0 int
@@ -29,9 +32,9 @@ type Tank struct {
 }
 
 type Bullet struct {
-	Id int64
+	Id   int64
 	Tank *Tank
-	Cell      *Cell
+	Cell *Cell
 
 	X       int
 	Y       int
@@ -46,8 +49,11 @@ func (board *Board) New(boardRows, boardColumns int, isEnemy bool) *Tank {
 	tank := new(Tank)
 	tank.Id = time.Now().UnixNano()
 	tank.Bullet = nil
-	tank.Lives = int(r1.Int31n(5)) + 1
+	tank.Lives = new(int)
+	*tank.Lives = int(r1.Int31n(5)) + 1
 	tank.IsEnemy = isEnemy
+	tank.BulletLimit = 5
+	tank.GameBoard = board
 
 	tank.BOTTOM_0 = 0
 	tank.BOTTOM_1 = 1
@@ -94,7 +100,7 @@ func (tank *Tank) MoveToPosition(x, y int) {
 		tank.Cells[i] = *tank.GameBoard.NewCell(x-tank.Cells[i].X, y-tank.Cells[i].Y,
 			tank.GameBoard.GetBoardColumns(), tank.GameBoard.GetBoardRows())
 	}
-	tank.SetAlive(tank.Lives >= 0, tank.IsEnemy)
+	tank.SetAlive(*tank.Lives >= 0, tank.IsEnemy)
 }
 
 func (tank *Tank) MoveForward() {
@@ -114,7 +120,7 @@ func (tank *Tank) MoveForward() {
 		tank.Cells[i] = *tank.GameBoard.NewCell(tank.Cells[i].X+moveX_step, tank.Cells[i].Y+moveY_step,
 			tank.GameBoard.GetBoardColumns(), tank.GameBoard.GetBoardRows())
 	}
-	tank.SetAlive(tank.Lives >= 0, tank.IsEnemy)
+	tank.SetAlive(*tank.Lives >= 0, tank.IsEnemy)
 }
 
 func (tank *Tank) RotateRight() {
@@ -138,7 +144,7 @@ func (tank *Tank) RotateRight() {
 	tank.GUN_1 = tmp_MID_2
 	tank.GUN_2 = tmp_BOTTOM_2
 
-	tank.SetAlive(tank.Lives >= 0, tank.IsEnemy)
+	tank.SetAlive(*tank.Lives >= 0, tank.IsEnemy)
 }
 
 func (tank *Tank) RotateLeft() {
@@ -162,7 +168,7 @@ func (tank *Tank) RotateLeft() {
 	tank.GUN_1 = tmp_MID_0
 	tank.GUN_2 = tmp_GUN_0
 
-	tank.SetAlive(tank.Lives >= 0, tank.IsEnemy)
+	tank.SetAlive(*tank.Lives >= 0, tank.IsEnemy)
 }
 
 func (tank *Tank) Rotate180() {
@@ -171,6 +177,9 @@ func (tank *Tank) Rotate180() {
 }
 
 func (tank *Tank) Fire() {
+	if len(tank.Bullet) > tank.BulletLimit {
+		return
+	}
 	game_board := tank.GameBoard
 	bullet := new(Bullet)
 	bullet.X = tank.Cells[tank.GUN_1].X
@@ -204,17 +213,52 @@ func (bullet *Bullet) Draw() {
 	y += bullet.YDirect
 
 	if x < 0 || y < 0 || x >= game_board.GetBoardColumns() || y >= game_board.GetBoardRows() {
-		bullets := make([]Bullet, 0)
-		for _, b := range tank.Bullet {
-			if bullet.Id != b.Id {
-				bullets = append(bullets, b)
-			}
-		}
-		tank.Bullet = bullets
+		bullet.remove()
 	} else {
 		bullet.Cell = game_board.NewCell(x, y, game_board.GetBoardColumns(), game_board.GetBoardRows())
 		*bullet.Cell.Alive = true
 		bullet.X = x
 		bullet.Y = y
 	}
+
+	if tank.IsEnemy {
+		for i := 0; i < len(game_board.PlayerTanks); i++ {
+			player := game_board.PlayerTanks[i]
+			player.checkAlive(bullet)
+		}
+	} else {
+		for i := 0; i < len(game_board.EnemyTanks); i++ {
+			enemy := game_board.EnemyTanks[i]
+			enemy.checkAlive(bullet)
+			log.Print(*enemy.Lives)
+		}
+	}
+}
+
+func (tank *Tank) checkAlive(bullet *Bullet) {
+	for i := 0; i < len(tank.Cells); i++ {
+		cell := tank.Cells[i]
+		if cell.X == bullet.X && cell.Y == bullet.Y {
+			log.Print("hit")
+			*tank.Lives -= 1
+
+			bullet.remove()
+
+			break
+		}
+	}
+	if *tank.Lives < 0 {
+		tank.SetAlive(false, tank.IsEnemy)
+		tank.GameBoard.DestroyTank(tank.Id)
+	}
+}
+
+func (bullet *Bullet) remove() {
+	bullets := make([]Bullet, 0)
+	for _, b := range bullet.Tank.Bullet {
+		if bullet.Id != b.Id {
+			bullets = append(bullets, b)
+		}
+	}
+	bullet.Tank.Bullet = bullets
 }

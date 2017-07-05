@@ -32,7 +32,7 @@ const (
 		}
 	` + "\x00"
 
-	fps = 10
+	fps = 60
 )
 
 func main() {
@@ -45,18 +45,24 @@ func main() {
 
 	game_board := object.Board{Program: program, Window: window}
 	game_board.MakeCells()
-	game_board.MakeEnemyTanks(2)
+	game_board.MakeEnemyTanks(1)
 	game_board.MakePlayerTanks(1)
 	//game_board.DestroyTank(0)
 
-	game_board.PlayerTanks[0].MoveToPosition(50,50)
 	game_board.PlayerTanks[0].RotateRight()
 	game_board.PlayerTanks[0].Fire()
+	game_board.PlayerTanks[0].Fire()
+	game_board.PlayerTanks[0].Fire()
+	game_board.PlayerTanks[0].Fire()
+	game_board.PlayerTanks[0].Fire()
+	game_board.PlayerTanks[0].Fire()
+
+	game_board.EnemyTanks[0].MoveToPosition(50, 2)
 
 	for !window.ShouldClose() {
 		t := time.Now()
 
-		for i:=0;i<len(game_board.EnemyTanks);i++ {
+		for i := 0; i < len(game_board.EnemyTanks); i++ {
 			s1 := rand.NewSource(time.Now().UnixNano())
 			r1 := rand.New(s1)
 			if r1.Float32() > 0.45 {
@@ -65,17 +71,17 @@ func main() {
 				game_board.EnemyTanks[i].RotateLeft()
 			}
 			if r1.Float32() > 0.7 {
-				game_board.EnemyTanks[i].Fire()
+				//game_board.EnemyTanks[i].Fire()
 			}
 
-			game_board.EnemyTanks[i].MoveForward()
+			//game_board.EnemyTanks[i].MoveForward()
 			//tank.MoveToPosition(50,50)
 			//log.Printf("Enemy 0 bullet count %d", len(game_board.EnemyTanks[0].Bullet))
 		}
 
 		runtime.ReadMemStats(memory_stats)
-		fmt.Println("Time;Allocated;Total Allocated; System Memory;Num Gc;Heap Allocated;Heap System;Heap Objects;Heap Released;\n")
-		fmt.Printf("%s;%d;%d;%d;%d;%d;%d;%d;%d;\n", time.Now(), memory_stats.Alloc, memory_stats.TotalAlloc, memory_stats.Sys, memory_stats.NumGC, memory_stats.HeapAlloc, memory_stats.HeapSys, memory_stats.HeapObjects, memory_stats.HeapReleased)
+		//fmt.Println("Time;Allocated;Total Allocated; System Memory;Num Gc;Heap Allocated;Heap System;Heap Objects;Heap Released;\n")
+		//fmt.Printf("%s;%d;%d;%d;%d;%d;%d;%d;%d;\n", time.Now(), memory_stats.Alloc, memory_stats.TotalAlloc, memory_stats.Sys, memory_stats.NumGC, memory_stats.HeapAlloc, memory_stats.HeapSys, memory_stats.HeapObjects, memory_stats.HeapReleased)
 		game_board.Draw()
 
 		time.Sleep(time.Second/time.Duration(fps) - time.Since(t))
