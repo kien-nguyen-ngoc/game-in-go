@@ -1,9 +1,9 @@
 package object
 
 import (
-	"log"
 	"math/rand"
 	"time"
+	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 type Tank struct {
@@ -11,11 +11,9 @@ type Tank struct {
 	Id        int64
 	Cells     []Cell
 
-	X     int
-	Y     int
 	Lives *int
 
-	Bullet      []Bullet
+	Bullets     []Bullet
 	BulletLimit int
 
 	IsEnemy bool
@@ -42,13 +40,13 @@ type Bullet struct {
 	YDirect int
 }
 
-func (board *Board) New(boardRows, boardColumns int, isEnemy bool) *Tank {
+func (board *Board) NewTank(boardRows, boardColumns int, isEnemy bool) *Tank {
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
 
 	tank := new(Tank)
 	tank.Id = time.Now().UnixNano()
-	tank.Bullet = nil
+	tank.Bullets = nil
 	tank.Lives = new(int)
 	*tank.Lives = int(r1.Int31n(5)) + 1
 	tank.IsEnemy = isEnemy
@@ -177,7 +175,7 @@ func (tank *Tank) Rotate180() {
 }
 
 func (tank *Tank) Fire() {
-	if len(tank.Bullet) > tank.BulletLimit {
+	if len(tank.Bullets) > tank.BulletLimit {
 		return
 	}
 	game_board := tank.GameBoard
@@ -192,7 +190,7 @@ func (tank *Tank) Fire() {
 	bullet.Tank = tank
 	bullet.Id = time.Now().UnixNano()
 
-	tank.Bullet = append(tank.Bullet, *bullet)
+	tank.Bullets = append(tank.Bullets, *bullet)
 }
 
 func (tank *Tank) Draw() {
@@ -213,7 +211,7 @@ func (bullet *Bullet) Draw() {
 	y += bullet.YDirect
 
 	if x < 0 || y < 0 || x >= game_board.GetBoardColumns() || y >= game_board.GetBoardRows() {
-		bullet.remove()
+		bullet.Remove()
 	} else {
 		bullet.Cell = game_board.NewCell(x, y, game_board.GetBoardColumns(), game_board.GetBoardRows())
 		*bullet.Cell.Alive = true
@@ -224,25 +222,23 @@ func (bullet *Bullet) Draw() {
 	if tank.IsEnemy {
 		for i := 0; i < len(game_board.PlayerTanks); i++ {
 			player := game_board.PlayerTanks[i]
-			player.checkAlive(bullet)
+			player.checkHit(bullet)
 		}
 	} else {
 		for i := 0; i < len(game_board.EnemyTanks); i++ {
 			enemy := game_board.EnemyTanks[i]
-			enemy.checkAlive(bullet)
-			log.Print(*enemy.Lives)
+			enemy.checkHit(bullet)
 		}
 	}
 }
 
-func (tank *Tank) checkAlive(bullet *Bullet) {
+func (tank *Tank) checkHit(bullet *Bullet) {
 	for i := 0; i < len(tank.Cells); i++ {
 		cell := tank.Cells[i]
 		if cell.X == bullet.X && cell.Y == bullet.Y {
-			log.Print("hit")
 			*tank.Lives -= 1
 
-			bullet.remove()
+			bullet.Remove()
 
 			break
 		}
@@ -253,12 +249,27 @@ func (tank *Tank) checkAlive(bullet *Bullet) {
 	}
 }
 
-func (bullet *Bullet) remove() {
+func (bullet *Bullet) Remove() {
 	bullets := make([]Bullet, 0)
-	for _, b := range bullet.Tank.Bullet {
+	for _, b := range bullet.Tank.Bullets {
 		if bullet.Id != b.Id {
 			bullets = append(bullets, b)
 		}
 	}
-	bullet.Tank.Bullet = bullets
+	bullet.Tank.Bullets = bullets
+}
+
+
+func (board *Board)ControlTank(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+	if key == glfw.KeyW && action == glfw.Press {
+		board.PlayerTanks[0].MoveForward()
+	} else if key == glfw.KeyS && action == glfw.Press {
+		board.PlayerTanks[0].Rotate180()
+	} else if key == glfw.KeyA && action == glfw.Press {
+		board.PlayerTanks[0].RotateLeft()
+	} else if key == glfw.KeyD && action == glfw.Press {
+		board.PlayerTanks[0].RotateRight()
+	}  else if key == glfw.KeySpace && action == glfw.Press {
+		board.PlayerTanks[0].Fire()
+	}
 }

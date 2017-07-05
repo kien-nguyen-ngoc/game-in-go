@@ -11,7 +11,6 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 
 	"./object"
-	//"./play"
 	"math/rand"
 )
 
@@ -39,23 +38,25 @@ func main() {
 	runtime.LockOSThread()
 	memory_stats := &runtime.MemStats{}
 
-	window := initGlfw()
+	game_board := new(object.Board)
+
+	window := initGlfw(game_board)
 	defer glfw.Terminate()
 	program := initOpenGL()
 
-	game_board := object.Board{Program: program, Window: window}
 	game_board.MakeCells()
 	game_board.MakeEnemyTanks(1)
 	game_board.MakePlayerTanks(1)
+	game_board.MakeBarrier(20)
 	//game_board.DestroyTank(0)
 
-	game_board.PlayerTanks[0].RotateRight()
+	//game_board.PlayerTanks[0].RotateRight()
 	game_board.PlayerTanks[0].Fire()
-	game_board.PlayerTanks[0].Fire()
-	game_board.PlayerTanks[0].Fire()
-	game_board.PlayerTanks[0].Fire()
-	game_board.PlayerTanks[0].Fire()
-	game_board.PlayerTanks[0].Fire()
+	//game_board.PlayerTanks[0].Fire()
+	//game_board.PlayerTanks[0].Fire()
+	//game_board.PlayerTanks[0].Fire()
+	//game_board.PlayerTanks[0].Fire()
+	//game_board.PlayerTanks[0].Fire()
 
 	game_board.EnemyTanks[0].MoveToPosition(50, 2)
 
@@ -82,14 +83,14 @@ func main() {
 		runtime.ReadMemStats(memory_stats)
 		//fmt.Println("Time;Allocated;Total Allocated; System Memory;Num Gc;Heap Allocated;Heap System;Heap Objects;Heap Released;\n")
 		//fmt.Printf("%s;%d;%d;%d;%d;%d;%d;%d;%d;\n", time.Now(), memory_stats.Alloc, memory_stats.TotalAlloc, memory_stats.Sys, memory_stats.NumGC, memory_stats.HeapAlloc, memory_stats.HeapSys, memory_stats.HeapObjects, memory_stats.HeapReleased)
-		game_board.Draw()
+		game_board.Draw(window, program)
 
 		time.Sleep(time.Second/time.Duration(fps) - time.Since(t))
 	}
 }
 
 // initGlfw initializes glfw and returns a Window to use.
-func initGlfw() *glfw.Window {
+func initGlfw(board *object.Board) *glfw.Window {
 	if err := glfw.Init(); err != nil {
 		panic(err)
 	}
@@ -103,10 +104,14 @@ func initGlfw() *glfw.Window {
 	if err != nil {
 		panic(err)
 	}
+
+	window.SetKeyCallback(board.OnKey)
+
 	window.MakeContextCurrent()
 
 	return window
 }
+
 
 // initOpenGL initializes OpenGL and returns an initialized program.
 func initOpenGL() uint32 {
